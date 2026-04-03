@@ -860,6 +860,10 @@ const SLIDES = {
 };
 document.getElementById('headerLogo').src = SLIDES.sonobo_avatar;
 
+let currentChapter = 0;
+let currentStep = 0;
+let totalSteps = 0;
+
 let quizScores = { correct: 0, total: 0 };
 
 function slideImg(key, caption='') {
