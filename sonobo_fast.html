@@ -1237,7 +1237,17 @@ const chapters = [
           1,
           '左側では脾臓と横隔膜の間（脾横隔膜陥凹）に液体が溜まりやすいです。また脾腎境界も重要な評価部位です。'
         )}
-        <button class="btn-next" onclick="nextStep()">次へ →</button>
+        <div class="completion-card" style="margin-top:20px">
+          ${sonoboSVG(80)}
+          <h2>🎉 FASTエコー修了！</h2>
+          <p>モリソン窩・脾周囲・心嚢・胸水の<strong>4つのビュー</strong>を学んだね！<br>実際にやってみよう。</p>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn-next" style="flex:1;background:linear-gradient(135deg,#1a6fd4,#4a9eff)" onclick="window.open('https://sonoforge.streamlit.app/', '_blank')">
+            🎯 実践パート：画像をアップロードして助言をもらう
+          </button>
+        </div>
+        <button style="width:100%;margin-top:10px;padding:12px;background:white;border:2px solid #c8d8f8;border-radius:14px;color:var(--text-light);font-size:0.85rem;cursor:pointer;font-family:'M PLUS Rounded 1c',sans-serif;font-weight:700" onclick="window.location.href='index.html'">コース選択に戻る 🏠</button>
       `,
     ]
   }
