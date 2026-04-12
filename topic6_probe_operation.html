@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トピック6 プローブ操作の基本 — ソノボ君</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a6fd4;
+    --primary-light: #4a9eff;
+    --primary-dark: #0d4fa0;
+    --accent: #00c8a0;
+    --accent2: #ff6b35;
+    --accent3: #f7c948;
+    --purple: #8b5cf6;
+    --bg: #f0f6ff;
+    --card: #ffffff;
+    --text: #1a2540;
+    --text-light: #5a6a8a;
+    --shadow: 0 4px 24px rgba(26,111,212,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .app-header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+    padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;
+  }
+  .header-back {
+    background: rgba(255,255,255,0.18); border: none; border-radius: 50%;
+    width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: white; font-size: 1.2rem; text-decoration: none; flex-shrink: 0;
+  }
+  .header-title { color: white; font-family: 'M PLUS Rounded 1c', sans-serif; }
+  .header-title h1 { font-size: 1.05rem; font-weight: 800; }
+  .header-title p { font-size: 0.72rem; opacity: 0.85; }
+  .main { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  /* CHAT */
+  .chat-wrap { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 22px; animation: fadeUp 0.4s ease; }
+  .sonobo-avatar { width: 58px; height: 58px; flex-shrink: 0; filter: drop-shadow(0 4px 8px rgba(26,111,212,0.3)); animation: bounce 3s ease-in-out infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .bubble {
+    background: white; border-radius: 20px 20px 20px 4px; padding: 14px 18px;
+    box-shadow: var(--shadow); flex: 1; font-size: 0.92rem; line-height: 1.78;
+    border-left: 4px solid var(--primary); position: relative;
+  }
+  .bubble::before { content:''; position:absolute; left:-8px; bottom:16px; border:8px solid transparent; border-right-color:white; border-left:none; }
+  .bubble .speaker { font-family:'M PLUS Rounded 1c',sans-serif; font-weight:800; color:var(--primary); font-size:0.78rem; margin-bottom:5px; }
+  .chat-wrap-user { display:flex; align-items:flex-end; gap:12px; margin-bottom:22px; flex-direction:row-reverse; animation:fadeUp 0.4s ease; }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 20px 20px 4px 20px; padding: 14px 18px;
+    box-shadow: var(--shadow); flex: 1; font-size: 0.92rem; line-height: 1.78;
+    color: white; position: relative; max-width: 85%;
+  }
+  .bubble-user::before { content:''; position:absolute; right:-8px; bottom:16px; border:8px solid transparent; border-left-color:var(--primary-light); border-right:none; }
+  .bubble-user .speaker { font-family:'M PLUS Rounded 1c',sans-serif; font-weight:800; font-size:0.78rem; margin-bottom:5px; opacity:0.85; }
+  .user-icon { width:44px; height:44px; flex-shrink:0; background:linear-gradient(135deg,#e8f0ff,#c4d8ff); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+
+  /* OPERATION CARD */
+  .op-card {
+    background: white;
+    border-radius: 18px;
+    padding: 0;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: fadeUp 0.4s ease;
+  }
+  .op-card-header {
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    color: white;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+  }
+  .op-icon { font-size: 2rem; }
+  .op-card-header .op-subtitle { font-size: 0.75rem; font-weight: 400; opacity: 0.9; }
+  .op-slide { background: linear-gradient(135deg, #1a6fd4, #4a9eff); }
+  .op-rock  { background: linear-gradient(135deg, #8b5cf6, #c084fc); }
+  .op-sweep { background: linear-gradient(135deg, #00c8a0, #1a6fd4); }
+  .op-fan   { background: linear-gradient(135deg, #ff6b35, #f7c948); }
+  .op-compress { background: linear-gradient(135deg, #e03535, #ff6b35); }
+  .op-rotate { background: linear-gradient(135deg, #0d4fa0, #8b5cf6); }
+  .op-body { padding: 16px 18px; font-size: 0.87rem; line-height: 1.78; }
+  .op-body h4 { font-family:'M PLUS Rounded 1c',sans-serif; font-weight:800; margin-bottom:6px; color:var(--text); }
+  .op-body .detail { font-size:0.85rem; color:var(--text-light); margin-bottom:10px; }
+  .op-body .clinic { background:#f0f6ff; border-radius:10px; padding:10px 13px; font-size:0.83rem; border-left:3px solid var(--primary); }
+  .op-body .clinic-title { font-weight:700; color:var(--primary); font-size:0.82rem; margin-bottom:4px; }
+
+  /* DIAGRAM */
+  .diagram-box {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    animation: fadeUp 0.4s ease;
+  }
+  .diagram-svg-wrap { margin: 10px auto; }
+
+  /* INFO BOX */
+  .info-box { background:white; border-radius:14px; padding:16px 18px; margin-bottom:14px; box-shadow:var(--shadow); border-left:4px solid var(--primary); font-size:0.88rem; line-height:1.75; animation:fadeUp 0.4s ease; }
+  .info-box.accent { border-left-color:var(--accent); }
+  .info-box h3 { font-family:'M PLUS Rounded 1c',sans-serif; font-size:0.9rem; font-weight:800; margin-bottom:6px; }
+  .info-box h3.blue { color:var(--primary); }
+  .info-box h3.green { color:var(--accent); }
+
+  /* KEY POINT */
+  .key-point { background:linear-gradient(135deg,#e8f8f4,#f0fff8); border:1.5px solid #00c8a0; border-radius:14px; padding:14px 16px; margin-bottom:14px; font-size:0.87rem; line-height:1.75; animation:fadeUp 0.4s ease; }
+  .key-point .kp-title { font-family:'M PLUS Rounded 1c',sans-serif; font-weight:800; color:var(--accent); font-size:0.88rem; margin-bottom:5px; }
+  .key-point ul { padding-left:1.2em; }
+  .key-point li { margin-bottom:4px; }
+
+  /* PROGRESS */
+  .progress-bar { background:#e0e8f8; border-radius:20px; height:8px; margin-bottom:24px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--primary)); border-radius:20px; }
+
+  /* QUIZ */
+  .quiz-block { background:white; border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:var(--shadow); border-top:4px solid var(--accent3); animation:fadeUp 0.4s ease; }
+  .quiz-block .q-label { font-family:'M PLUS Rounded 1c',sans-serif; font-size:0.75rem; color:#b8860b; font-weight:800; margin-bottom:6px; background:#fff9e0; display:inline-block; padding:2px 10px; border-radius:20px; }
+  .quiz-block .q-text { font-size:0.9rem; font-weight:700; margin-bottom:12px; line-height:1.5; }
+  .quiz-options { display:flex; flex-direction:column; gap:8px; }
+  .quiz-option { border:2px solid #e0e8f8; border-radius:10px; padding:10px 14px; cursor:pointer; font-size:0.87rem; transition:all 0.18s; background:#fafbff; user-select:none; }
+  .quiz-option:hover { border-color:var(--primary); background:#f0f6ff; }
+  .quiz-option.correct { background:#e8fff6; border-color:var(--accent); color:#006d50; font-weight:700; }
+  .quiz-option.wrong { background:#ffe8e8; border-color:#e03535; color:#c00; }
+  .quiz-feedback { display:none; margin-top:10px; padding:10px 14px; border-radius:10px; font-size:0.85rem; line-height:1.6; }
+  .quiz-feedback.show { display:block; }
+  .quiz-feedback.ok { background:#e8fff6; color:#006d50; }
+  .quiz-feedback.ng { background:#ffe8e8; color:#c00; }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; margin-bottom:14px; animation:fadeUp 0.4s ease; }
+  table { width:100%; border-collapse:collapse; font-size:0.82rem; background:white; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+  th { background:linear-gradient(135deg,var(--primary-dark),var(--primary)); color:white; padding:10px 12px; text-align:left; font-family:'M PLUS Rounded 1c',sans-serif; }
+  td { padding:9px 12px; border-bottom:1px solid #e8f0ff; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:#f8fbff; }
+
+  .next-btn { display:block; width:100%; padding:16px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:white; border:none; border-radius:16px; font-family:'M PLUS Rounded 1c',sans-serif; font-size:1rem; font-weight:800; cursor:pointer; text-align:center; text-decoration:none; margin-top:24px; box-shadow:0 4px 16px rgba(26,111,212,0.3); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  strong { color:var(--primary); }
+  em { color:var(--accent2); font-style:normal; font-weight:700; }
+  .tag { display:inline-block; background:#e8f0ff; color:var(--primary); border-radius:20px; padding:2px 10px; font-size:0.78rem; font-weight:700; margin-right:4px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <a class="header-back" href="sonobo_lecture.html">‹</a>
+  <div class="header-title">
+    <h1>🎮 トピック 6</h1>
+    <p>プローブ操作の基本（6つの走査操作）</p>
+  </div>
+</header>
+
+<main class="main">
+
+  <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+
+  <!-- オープニング -->
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      今回はプローブの「動かし方」を学ぶよ！<br>
+      基本操作は6つ：<strong>スライド・ロック（ロッキング）・スイープ・ファン（チルト）・圧迫・回転</strong>だ。<br>
+      使い分けができると、見たい断面をサクッと出せるようになるよ🎯
+    </div>
+  </div>
+
+  <!-- 操作一覧テーブル -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>操作名</th><th>動き</th><th>主な用途</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>スライド</strong></td><td>平行移動（横/縦にずらす）</td><td>観察範囲を移す</td></tr>
+        <tr><td><strong>ロッキング</strong></td><td>プローブを傾けて揺らす（扇状・頭尾方向）</td><td>深部の死角を見る</td></tr>
+        <tr><td><strong>スイープ</strong></td><td>体表面に平行に広く動かす</td><td>臓器全体を把握</td></tr>
+        <tr><td><strong>ファン（チルト）</strong></td><td>プローブの端を支点に傾ける（扇状・左右方向）</td><td>断面の角度を変える</td></tr>
+        <tr><td><strong>圧迫（コンプレッション）</strong></td><td>プローブで押す・離す</td><td>血管の圧縮性確認、血栓評価</td></tr>
+        <tr><td><strong>回転</strong></td><td>中心軸を固定して回す</td><td>短軸↔長軸の切り替え</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      一つひとつ詳しく見ていこう！よく混乱しがちな「ファン」と「ロッキング」の違いもしっかり説明するよ🔍
+    </div>
+  </div>
+
+  <!-- ===== 1. スライド ===== -->
+  <div class="op-card">
+    <div class="op-card-header op-slide">
+      <span class="op-icon">↔️</span>
+      <div>
+        <div>① スライド（Sliding）</div>
+        <div class="op-subtitle">接触を保ちながら平行移動</div>
+      </div>
+    </div>
+    <div class="op-body">
+      <h4>📖 一言まとめ</h4>
+      <p class="detail">皮膚に当てたまま、プローブを<strong>横（または縦）にずらす</strong>動作。観察範囲を横に移していく。</p>
+      <div class="clinic">
+        <div class="clinic-title">🏥 臨床のポイント</div>
+        <ul style="padding-left:1.2em; line-height:1.7;">
+          <li>体表エコーで肝臓の右葉から左葉に断面を移すときなどに使う</li>
+          <li>ゲルが切れると接触が途切れるので注意</li>
+          <li>スライドしながら解剖を追いかけることで<em>広い視野</em>が確保できる</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ 1 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 1</div>
+    <div class="q-text">スライドの動作として正しいのはどれ？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, true, 'q1')">A. プローブを皮膚に当てたまま、横または縦にずらす</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q1')">B. プローブの端を支点にして傾ける</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q1')">C. プローブを中心軸で回転させる</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q1')">D. プローブで体表を押す</div>
+    </div>
+    <div id="q1-ok" class="quiz-feedback ok">⭕ 正解！スライドは平行移動です。観察範囲を移すときに使います。</div>
+    <div id="q1-ng" class="quiz-feedback ng">❌ スライドは「平行移動（横/縦にずらす）」です。傾ける操作はロッキングやファン、回転は別の動作です。</div>
+  </div>
+
+  <!-- ===== 2. ロッキング ===== -->
+  <div class="op-card">
+    <div class="op-card-header op-rock">
+      <span class="op-icon">🪨</span>
+      <div>
+        <div>② ロッキング（Rocking）</div>
+        <div class="op-subtitle">プローブを前後に「揺らす」</div>
+      </div>
+    </div>
+    <div class="op-body">
+      <h4>📖 一言まとめ</h4>
+      <p class="detail">プローブを<strong>頭尾方向（縦の方向）に傾けて揺らす</strong>動作。接触面を支点にして上下に揺れるイメージ。</p>
+      <div class="clinic">
+        <div class="clinic-title">🏥 臨床のポイント</div>
+        <ul style="padding-left:1.2em; line-height:1.7;">
+          <li>心臓エコーで心尖部を見るときなど、<strong>深部の死角に超音波ビームを届かせる</strong>のに有効</li>
+          <li>ファン（チルト）と混同しやすい！ロッキングは「頭尾方向（縦）」、ファンは「左右方向（横）」が多い</li>
+          <li>お腹を支点にしてプローブをシーソーのように動かすイメージ</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. スイープ ===== -->
+  <div class="op-card">
+    <div class="op-card-header op-sweep">
+      <span class="op-icon">🌊</span>
+      <div>
+        <div>③ スイープ（Sweep）</div>
+        <div class="op-subtitle">広く動かして全体像を把握</div>
+      </div>
+    </div>
+    <div class="op-body">
+      <h4>📖 一言まとめ</h4>
+      <p class="detail">体表面に沿って<strong>広くゆっくり動かす</strong>動作。スライドと似ているが、より広い範囲をスキャンすることを指す。</p>
+      <div class="clinic">
+        <div class="clinic-title">🏥 臨床のポイント</div>
+        <ul style="padding-left:1.2em; line-height:1.7;">
+          <li>胸水・腹水の有無を素早く確認するのに使う</li>
+          <li>FASTexam（外傷の初期評価）でも広域をスキャンするのに活用</li>
+          <li>ゆっくり動かして<em>見逃しを防ぐ</em>ことが重要</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ 2 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 2</div>
+    <div class="q-text">外傷患者のFAST examinationで腹腔内出血を確認するために使われる操作で最も適切なのは？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q2')">A. 回転（短軸↔長軸の切り替え）だけを繰り返す</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q2')">B. 圧迫（コンプレッション）で臓器を押す</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q2')">C. スイープで広い範囲を素早くスキャンする</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q2')">D. 固定してファンだけを繰り返す</div>
+    </div>
+    <div id="q2-ok" class="quiz-feedback ok">⭕ 正解！FAST examでは広域をスイープして素早く出血を確認します。</div>
+    <div id="q2-ng" class="quiz-feedback ng">❌ 広い範囲を素早く確認するには<strong>スイープ</strong>が適しています。回転は断面切り替え、圧迫は血栓評価などに使います。</div>
+  </div>
+
+  <!-- ===== 4. ファン（チルト） ===== -->
+  <div class="op-card">
+    <div class="op-card-header op-fan">
+      <span class="op-icon">🪭</span>
+      <div>
+        <div>④ ファン（Fan / チルト, Tilting）</div>
+        <div class="op-subtitle">扇形に傾けて断面角度を変える</div>
+      </div>
+    </div>
+    <div class="op-body">
+      <h4>📖 一言まとめ</h4>
+      <p class="detail">プローブの<strong>一端を支点</strong>に、超音波ビームを扇形に傾ける動作。断面の角度を変えることができる。</p>
+      <div class="clinic">
+        <div class="clinic-title">🏥 臨床のポイント</div>
+        <ul style="padding-left:1.2em; line-height:1.7;">
+          <li>心臓エコーでの四腔断面から二腔断面への移行など、<strong>同じ窓からビーム方向を変える</strong>のに使う</li>
+          <li><strong>ロッキングとの違い</strong>：チルトは端を支点に傾けるが、ロッキングは中央付近で頭尾方向に揺れる</li>
+          <li>Bラインの評価では、ファンで見え方が変わるので<em>装置設定（プリセット等）も同時確認</em>しよう</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ロッキングとファンの比較 -->
+  <div class="info-box">
+    <h3 class="blue">🔀 ロッキング vs ファン（チルト）の違い</h3>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+      <div style="flex:1; min-width:140px; background:#f0f6ff; padding:10px; border-radius:10px;">
+        <strong style="font-size:0.85rem;">🪨 ロッキング</strong><br>
+        <span style="font-size:0.82rem; color:var(--text-light);">接触面を支点に<br>頭尾方向（縦）に揺らす</span>
+      </div>
+      <div style="flex:1; min-width:140px; background:#f5f0ff; padding:10px; border-radius:10px;">
+        <strong style="font-size:0.85rem; color:var(--purple);">🪭 ファン（チルト）</strong><br>
+        <span style="font-size:0.82rem; color:var(--text-light);">端を支点に<br>左右（横）に傾ける</span>
+      </div>
+    </div>
+    <p style="margin-top:8px; font-size:0.83rem; color:var(--text-light);">※実際の操作では混用されることもある。教科書や教官の説明と文脈を合わせて確認しよう。</p>
+  </div>
+
+  <!-- QUIZ 3 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 3</div>
+    <div class="q-text">ファン（チルト）とロッキングの主な違いとして正しいのはどれ？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q3')">A. ファンは平行移動、ロッキングは傾ける動作</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q3')">B. 傾ける方向や支点の位置が異なる（ロッキングは頭尾方向、ファンは扇状に角度を変える）</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q3')">C. ファンは短軸用、ロッキングは長軸用の操作</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q3')">D. 両方とも全く同じ動作で区別しなくてよい</div>
+    </div>
+    <div id="q3-ok" class="quiz-feedback ok">⭕ 正解！傾ける方向と支点の取り方に違いがあります。教科書によって定義が異なることもあるので、文脈で確認しましょう。</div>
+    <div id="q3-ng" class="quiz-feedback ng">❌ ロッキングは「頭尾方向に揺らす」、ファン（チルト）は「端を支点に扇状に傾ける」です。違いをしっかり区別しましょう。</div>
+  </div>
+
+  <!-- ===== 5. 圧迫（コンプレッション） ===== -->
+  <div class="op-card">
+    <div class="op-card-header op-compress">
+      <span class="op-icon">🫷</span>
+      <div>
+        <div>⑤ 圧迫・コンプレッション</div>
+        <div class="op-subtitle">押して離して圧縮性を評価</div>
+      </div>
+    </div>
+    <div class="op-body">
+      <h4>📖 一言まとめ</h4>
+      <p class="detail">プローブで<strong>適切な圧をかけ</strong>、圧縮性・疼痛・血栓評価などに使う。</p>
+      <p class="detail" style="margin-top:6px;">血管は圧迫で<em>虚脱（つぶれる）</em>が、<strong>血栓があるとつぶれにくい</strong>。深部静脈血栓症（DVT）の評価でよく使う！</p>
+      <div class="clinic">
+        <div class="clinic-title">🏥 臨床のポイント</div>
+        <ul style="padding-left:1.2em; line-height:1.7;">
+          <li>DVT評価では大腿静脈・膝窩静脈を<strong>短軸でコンプレッション</strong>して虚脱性を確認する</li>
+          <li>痛みの強い患者では「<em>説明→同意→疼痛配慮</em>」を入れてから実施する</li>
+          <li>プローブを強く押しすぎると、静脈が完全につぶれて評価できなくなることも</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ 4 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 4</div>
+    <div class="q-text">DVT（深部静脈血栓症）評価でコンプレッションを行う際、血栓が存在するとどうなる？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q4')">A. 静脈が完全につぶれる（虚脱する）</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q4')">B. 静脈がつぶれにくい（虚脱しない）</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q4')">C. 動脈と静脈が同時に虚脱する</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q4')">D. 痛みで患者が体動するため、評価できない</div>
+    </div>
+    <div id="q4-ok" class="quiz-feedback ok">⭕ 正解！血栓があると静脈が虚脱しにくくなります。これがDVT診断の重要な所見です。</div>
+    <div id="q4-ng" class="quiz-feedback ng">❌ 血栓があると静脈は<strong>つぶれにくく（虚脱しにくく）</strong>なります。正常静脈は圧迫でぺちゃんこになります。</div>
+  </div>
+
+  <!-- QUIZ 5 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 5</div>
+    <div class="q-text">コンプレッションを行う前に痛みの強い患者さんへ必要な対応として適切なのは？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q5')">A. 痛みは検査上のしかたないことなので、そのまま圧迫を行う</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q5')">B. 事前に説明・同意・疼痛配慮を行ってから実施する</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q5')">C. 痛がる患者には圧迫を行わず、MRIに切り替える</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q5')">D. 患者への説明は検査後でよい</div>
+    </div>
+    <div id="q5-ok" class="quiz-feedback ok">⭕ 正解！「説明→同意→疼痛配慮」のセットが大切です。患者さんへの配慮を忘れずに。</div>
+    <div id="q5-ng" class="quiz-feedback ng">❌ 痛みのある患者さんには<strong>事前の説明・同意・疼痛配慮</strong>が必要です。これはエコーに限らず医療全般に共通する原則です。</div>
+  </div>
+
+  <!-- ===== 6. 回転 ===== -->
+  <div class="op-card">
+    <div class="op-card-header op-rotate">
+      <span class="op-icon">🔄</span>
+      <div>
+        <div>⑥ 回転（Rotating）</div>
+        <div class="op-subtitle">短軸↔長軸を自在に切り替える</div>
+      </div>
+    </div>
+    <div class="op-body">
+      <h4>📖 一言まとめ</h4>
+      <p class="detail">プローブの<strong>中心軸を固定して回転</strong>する動作。同じ部位を「短軸」と「長軸」で確認できる。</p>
+      <div class="clinic">
+        <div class="clinic-title">🏥 臨床のポイント</div>
+        <ul style="padding-left:1.2em; line-height:1.7;">
+          <li>血管・神経・腱などは<strong>短軸で同定→回転して長軸確認</strong>が誤認を減らすコツ</li>
+          <li>画像保存時は<em>断面名（横断/縦断）と向き</em>が一貫していることが重要</li>
+          <li>中心軸がずれるとせっかくの断面を見失うので、指先でしっかり固定して回す</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ 6 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 6</div>
+    <div class="q-text">回転（ローテーション）操作の主な目的は何？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q6')">A. 観察部位を横に移動させる</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q6')">B. 短軸と長軸の断面を切り替える</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q6')">C. 深度（深さ）を変える</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q6')">D. プローブの圧力を増す</div>
+    </div>
+    <div id="q6-ok" class="quiz-feedback ok">⭕ 正解！回転で短軸↔長軸を切り替えることで、同じ部位をさまざまな断面で観察できます。</div>
+    <div id="q6-ng" class="quiz-feedback ng">❌ 回転は<strong>短軸↔長軸の断面切り替え</strong>に使います。横移動はスライド、深度変更は装置設定で行います。</div>
+  </div>
+
+  <!-- QUIZ 7 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 7</div>
+    <div class="q-text">大腿静脈を同定する際の正しい手順として最も推奨されるのは？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q7')">A. 最初から長軸で観察し、血管の走行を確認する</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q7')">B. まず短軸で同定し、回転して長軸で確認する</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q7')">C. ファンのみで全方向から確認する</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q7')">D. スライドだけで十分に評価できる</div>
+    </div>
+    <div id="q7-ok" class="quiz-feedback ok">⭕ 正解！短軸で同定してから回転して長軸確認するのが誤認を防ぐコツです。</div>
+    <div id="q7-ng" class="quiz-feedback ng">❌ 「短軸で同定→回転して長軸確認」が誤認を防ぎます。最初から長軸だと血管を間違える可能性があります。</div>
+  </div>
+
+  <!-- まとめ -->
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      6つの操作、全部マスターできたかな？🎉<br><br>
+      <strong>① スライド</strong>：平行移動で観察範囲を移す<br>
+      <strong>② ロッキング</strong>：頭尾方向に揺らして死角を補う<br>
+      <strong>③ スイープ</strong>：広い範囲を素早くスキャン<br>
+      <strong>④ ファン（チルト）</strong>：扇状に傾けて断面角度を変える<br>
+      <strong>⑤ 圧迫</strong>：押して血管の虚脱性を確認（DVTなど）<br>
+      <strong>⑥ 回転</strong>：中心軸固定で短軸↔長軸切り替え<br><br>
+      これらを組み合わせることで、見たい部位の最良断面を出せるようになるよ！実習で練習しよう🩺
+    </div>
+  </div>
+
+  <!-- 最終クイズ（複合問題） -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 総まとめクイズ</div>
+    <div class="q-text">次のシナリオで使う操作の組み合わせとして最も適切なのは？<br><small style="font-weight:400;">「腹部エコーで肝臓を全体的に観察した後、短軸で確認した門脈を長軸でも観察したい」</small></div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'qf')">A. 圧迫→スライド</div>
+      <div class="quiz-option" onclick="answer(this, true, 'qf')">B. スイープ（全体確認）→回転（短軸↔長軸切替）</div>
+      <div class="quiz-option" onclick="answer(this, false, 'qf')">C. ファンのみを繰り返す</div>
+      <div class="quiz-option" onclick="answer(this, false, 'qf')">D. ロッキング→圧迫</div>
+    </div>
+    <div id="qf-ok" class="quiz-feedback ok">⭕ 完璧！スイープで肝全体を確認してから、目的の部位で回転して断面を切り替える流れです。</div>
+    <div id="qf-ng" class="quiz-feedback ng">❌ 「全体確認→特定部位の断面切り替え」には<strong>スイープ→回転</strong>の組み合わせが適切です。各操作の目的を再確認しましょう。</div>
+  </div>
+
+  <a href="sonobo_lecture.html" class="next-btn">🏠 座学コース トップへ戻る</a>
+
+</main>
+
+<script>
+function answer(el, correct, qid) {
+  const opts = el.parentElement.querySelectorAll('.quiz-option');
+  opts.forEach(o => o.style.pointerEvents = 'none');
+  if (correct) {
+    el.classList.add('correct');
+    document.getElementById(qid + '-ok').classList.add('show');
+  } else {
+    el.classList.add('wrong');
+    document.getElementById(qid + '-ng').classList.add('show');
+    opts.forEach(o => {
+      if (o.getAttribute('onclick') && o.getAttribute('onclick').includes('true')) o.classList.add('correct');
+    });
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トピック5 プローブの取り扱い — ソノボ君</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1a6fd4;
+    --primary-light: #4a9eff;
+    --primary-dark: #0d4fa0;
+    --accent: #00c8a0;
+    --accent2: #ff6b35;
+    --accent3: #f7c948;
+    --danger: #e03535;
+    --bg: #f0f6ff;
+    --card: #ffffff;
+    --text: #1a2540;
+    --text-light: #5a6a8a;
+    --shadow: 0 4px 24px rgba(26,111,212,0.12);
+    --shadow-lg: 0 8px 40px rgba(26,111,212,0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .app-header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-back {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 1.2rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .header-title { color: white; font-family: 'M PLUS Rounded 1c', sans-serif; }
+  .header-title h1 { font-size: 1.05rem; font-weight: 800; }
+  .header-title p { font-size: 0.72rem; opacity: 0.85; }
+  .main { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  /* SONOBO CHAT */
+  .chat-wrap { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 22px; animation: fadeUp 0.4s ease; }
+  .sonobo-avatar {
+    width: 58px; height: 58px; flex-shrink: 0;
+    filter: drop-shadow(0 4px 8px rgba(26,111,212,0.3));
+    animation: bounce 3s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .bubble {
+    background: white;
+    border-radius: 20px 20px 20px 4px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+    flex: 1;
+    font-size: 0.92rem;
+    line-height: 1.78;
+    border-left: 4px solid var(--primary);
+    position: relative;
+  }
+  .bubble::before {
+    content:''; position:absolute; left:-8px; bottom:16px;
+    border:8px solid transparent; border-right-color:white; border-left:none;
+  }
+  .bubble .speaker {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-weight: 800;
+    color: var(--primary);
+    font-size: 0.78rem;
+    margin-bottom: 5px;
+  }
+
+  /* STUDENT CHAT (right side) */
+  .chat-wrap-user { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 22px; flex-direction: row-reverse; animation: fadeUp 0.4s ease; }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 20px 20px 4px 20px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+    flex: 1;
+    font-size: 0.92rem;
+    line-height: 1.78;
+    color: white;
+    position: relative;
+    max-width: 85%;
+  }
+  .bubble-user::before {
+    content:''; position:absolute; right:-8px; bottom:16px;
+    border:8px solid transparent; border-left-color: var(--primary-light); border-right:none;
+  }
+  .bubble-user .speaker { font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 800; font-size: 0.78rem; margin-bottom: 5px; opacity: 0.85; }
+  .user-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    background: linear-gradient(135deg,#e8f0ff,#c4d8ff);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    border-radius: 18px;
+    padding: 18px 22px;
+    margin: 28px 0 16px;
+    display: flex; align-items: center; gap: 14px;
+    animation: fadeUp 0.4s ease;
+  }
+  .sh-storage { background: linear-gradient(135deg,#1a6fd4,#4a9eff); color:white; }
+  .sh-care { background: linear-gradient(135deg,#0d4fa0,#1a6fd4); color:white; }
+  .sh-clean { background: linear-gradient(135deg,#00c8a0,#1a6fd4); color:white; }
+  .section-icon { font-size: 2.4rem; flex-shrink: 0; }
+  .section-header h2 { font-family: 'M PLUS Rounded 1c',sans-serif; font-size: 1.15rem; font-weight: 800; }
+  .section-header p { font-size: 0.75rem; opacity: 0.9; margin-top: 2px; }
+
+  /* INFO BOX */
+  .info-box {
+    background: white;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary);
+    font-size: 0.88rem;
+    line-height: 1.75;
+    animation: fadeUp 0.4s ease;
+  }
+  .info-box.accent { border-left-color: var(--accent); }
+  .info-box.accent2 { border-left-color: var(--accent2); }
+  .info-box.danger { border-left-color: var(--danger); }
+  .info-box h3 { font-family: 'M PLUS Rounded 1c',sans-serif; font-size: 0.9rem; font-weight: 800; margin-bottom: 6px; }
+  .info-box h3.green { color: var(--accent); }
+  .info-box h3.orange { color: var(--accent2); }
+  .info-box h3.red { color: var(--danger); }
+  .info-box h3.blue { color: var(--primary); }
+
+  /* KEY POINT */
+  .key-point {
+    background: linear-gradient(135deg,#e8f8f4,#f0fff8);
+    border: 1.5px solid #00c8a0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    font-size: 0.87rem;
+    line-height: 1.75;
+    animation: fadeUp 0.4s ease;
+  }
+  .key-point .kp-title { font-family:'M PLUS Rounded 1c',sans-serif; font-weight:800; color:var(--accent); font-size:0.88rem; margin-bottom:5px; }
+  .key-point ul { padding-left: 1.2em; }
+  .key-point li { margin-bottom: 4px; }
+
+  /* SPAULDING TABLE */
+  .table-wrap { overflow-x: auto; margin-bottom: 14px; animation: fadeUp 0.4s ease; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; background:white; border-radius: 12px; overflow:hidden; box-shadow: var(--shadow); }
+  th { background: linear-gradient(135deg,var(--primary-dark),var(--primary)); color:white; padding:10px 12px; text-align:left; font-family:'M PLUS Rounded 1c',sans-serif; }
+  td { padding: 9px 12px; border-bottom: 1px solid #e8f0ff; vertical-align:top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fbff; }
+  .badge-hld { background:#ffe8e8; color:#e03535; border-radius:8px; padding:2px 8px; font-weight:700; font-size:0.78rem; }
+  .badge-mld { background:#fff3e0; color:#e07000; border-radius:8px; padding:2px 8px; font-weight:700; font-size:0.78rem; }
+  .badge-lld { background:#e8fff6; color:#009970; border-radius:8px; padding:2px 8px; font-weight:700; font-size:0.78rem; }
+
+  /* QUIZ */
+  .quiz-block {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--accent3);
+    animation: fadeUp 0.4s ease;
+  }
+  .quiz-block .q-label {
+    font-family: 'M PLUS Rounded 1c',sans-serif;
+    font-size: 0.75rem;
+    color: #b8860b;
+    font-weight: 800;
+    margin-bottom: 6px;
+    background: #fff9e0;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+  .quiz-block .q-text { font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; line-height: 1.5; }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option {
+    border: 2px solid #e0e8f8;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.87rem;
+    transition: all 0.18s;
+    background: #fafbff;
+    user-select: none;
+  }
+  .quiz-option:hover { border-color: var(--primary); background: #f0f6ff; }
+  .quiz-option.correct { background: #e8fff6; border-color: var(--accent); color: #006d50; font-weight: 700; }
+  .quiz-option.wrong { background: #ffe8e8; border-color: var(--danger); color: #c00; }
+  .quiz-feedback {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.ok { background: #e8fff6; color: #006d50; }
+  .quiz-feedback.ng { background: #ffe8e8; color: #c00; }
+
+  /* PROGRESS */
+  .progress-bar {
+    background: #e0e8f8;
+    border-radius: 20px;
+    height: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--primary)); border-radius: 20px; transition: width 0.5s ease; }
+
+  /* NEXT BUTTON */
+  .next-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 24px;
+    box-shadow: 0 4px 16px rgba(26,111,212,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(26,111,212,0.4); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  strong { color: var(--primary); }
+  em { color: var(--accent2); font-style: normal; font-weight: 700; }
+
+  .tag {
+    display: inline-block;
+    background: #e8f0ff;
+    color: var(--primary);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .tag.green { background:#e8fff6; color:#009970; }
+  .tag.red { background:#ffe8e8; color:#c00; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <a class="header-back" href="sonobo_lecture.html">‹</a>
+  <div class="header-title">
+    <h1>🔬 トピック 5</h1>
+    <p>プローブの取り扱い（保管・洗浄・消毒）</p>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- 進捗バー -->
+  <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+
+  <!-- オープニング -->
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      今回はプローブの<strong>保管・取り扱い・清掃と消毒</strong>を学ぶよ！<br>
+      プローブはとても精密な機器なんだ。扱い方を間違えると画像が悪くなって診断を誤る原因にも😱<br>
+      一緒に丁寧に学んでいこう！
+    </div>
+  </div>
+
+  <!-- ======= セクション1: プローブの保管 ======= -->
+  <div class="section-header sh-storage">
+    <span class="section-icon">🗄️</span>
+    <div>
+      <h2>プローブの保管</h2>
+      <p>再汚染と破損を防ぐ正しい保管が大切</p>
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      まず「保管」だよ。プローブは使い終わった後、どこに置けばいいと思う？
+    </div>
+  </div>
+
+  <div class="chat-wrap-user">
+    <div class="user-icon">🙋</div>
+    <div class="bubble-user">
+      <div class="speaker">学生さん</div>
+      適当な棚に置いておけばいいんじゃ…？
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      ちょっと待って！プローブには<strong>清潔レベル</strong>があるんだ。<br>
+      消毒後にカバーをかけて保管したり、専用のホルダーで立てて保管するのが基本だよ。<br>
+      適当に置くと<strong>再汚染</strong>のリスクがあるし、落下や圧迫でレンズ面が傷つくと画質が落ちちゃう😢
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h3 class="blue">📌 一言まとめ</h3>
+    プローブは<strong>清潔レベルに応じて保管</strong>し、再汚染と破損を防ぐ。
+  </div>
+
+  <div class="key-point">
+    <div class="kp-title">🏥 臨床でのポイント（POCUS場面を想像して！）</div>
+    <ul>
+      <li>ベッドサイドに常備する場合、<strong>ハンドル・ケーブルも汚染しうる</strong>。保管前の清拭範囲を標準化しよう。</li>
+      <li>落下や圧迫でレンズ面が損傷すると<em>誤診リスク</em>が上がる。置き場所を固定すること！</li>
+      <li>AIUMのガイドでも「消毒レベルに応じた保管」が明示されている。</li>
+    </ul>
+  </div>
+
+  <!-- QUIZ 1 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 1</div>
+    <div class="q-text">プローブを適切に保管する目的として最も重要なものはどれ？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q1')">A. 次の検査ですぐ使えるよう、コードをまとめて引き出しに入れる</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q1')">B. 再汚染と破損を防ぐため、清潔レベルに応じた保管をする</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q1')">C. 電磁波を遮断するため、金属製の箱に保管する</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q1')">D. 乾燥を防ぐため、ゲルを付けたまま保管する</div>
+    </div>
+    <div id="q1-ok" class="quiz-feedback ok">⭕ 正解！清潔レベルに応じた保管が再汚染・破損の両方を防ぎます。</div>
+    <div id="q1-ng" class="quiz-feedback ng">❌ 惜しい！引き出しにまとめると他の器具と接触して再汚染や傷の原因になります。正解は「清潔レベルに応じた保管」です。</div>
+  </div>
+
+  <!-- ======= セクション2: プローブの取り扱い ======= -->
+  <div class="section-header sh-care">
+    <span class="section-icon">🛠️</span>
+    <div>
+      <h2>プローブの取り扱い</h2>
+      <p>精密機器＝機能低下→画質低下→診断低下の連鎖を避ける</p>
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      プローブは<strong>精密機器</strong>だよ。スマホより繊細かもしれない！<br>
+      <strong>機能低下＝画質低下＝診断低下</strong> という連鎖を覚えておこう。<br>
+      POCUSはベッドサイドで頻回に行われるから、落下・ケーブル断線などの<em>物理損傷</em>が特に起きやすいんだ。
+    </div>
+  </div>
+
+  <div class="info-box accent2">
+    <h3 class="orange">⚠️ 物理損傷の主な原因（POCUS特有のリスク）</h3>
+    <ul style="padding-left:1.2em; line-height:1.8;">
+      <li><strong>落下</strong>：床への衝撃でレンズが割れる</li>
+      <li><strong>ケーブルの無理な曲げ・断線</strong>：ベッドサイドでの操作中に発生しやすい</li>
+      <li><strong>不適切な圧力</strong>：過度な加圧で内部が損傷する</li>
+      <li><strong>高温・有機溶剤への接触</strong>：素材の変質が起きる</li>
+    </ul>
+  </div>
+
+  <div class="info-box">
+    <h3 class="blue">🔬 点検の重要性</h3>
+    ファントムなどを用いた<strong>定期的な劣化確認</strong>も重要。目に見えない内部損傷が気づかないうちに蓄積することがある。
+  </div>
+
+  <div class="key-point">
+    <div class="kp-title">🏥 臨床でのポイント</div>
+    <ul>
+      <li>「<em>突然ノイズが増えた／線が抜ける</em>」は所見ではなく<strong>機材トラブルの可能性</strong>を常に疑う！</li>
+      <li>穿刺・ドレナージなどの手技では、<strong>プローブカバー使用＋終了後の速やかな清拭</strong>をルーチン化する。</li>
+    </ul>
+  </div>
+
+  <!-- QUIZ 2 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 2</div>
+    <div class="q-text">エコー検査中に突然ノイズが増えて線状のアーチファクトが出現した。まず何を疑う？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q2')">A. 患者さんの体内に異常な組織がある</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q2')">B. ゲルが不足して接触が悪い</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q2')">C. プローブや装置の機材トラブルの可能性</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q2')">D. 深さ設定が浅すぎる</div>
+    </div>
+    <div id="q2-ok" class="quiz-feedback ok">⭕ 正解！「突然の変化＝機材トラブルかも」という意識が重要です。まず機器確認をしましょう。</div>
+    <div id="q2-ng" class="quiz-feedback ng">❌ 突然ノイズが増えた場合、まず<strong>機材トラブル</strong>を疑います。ゲル不足や設定ミスは緩やかに起きることが多いです。</div>
+  </div>
+
+  <!-- QUIZ 3 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 3</div>
+    <div class="q-text">穿刺手技でエコーガイドを行う際、プローブについて正しい対応は？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q3')">A. 清潔操作なので、プローブカバーは不要</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q3')">B. プローブカバーを使用し、終了後はすぐに清拭する</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q3')">C. ゲルを多めに使うことで、カバーを省略できる</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q3')">D. 手技後は24時間後に清拭すれば十分</div>
+    </div>
+    <div id="q3-ok" class="quiz-feedback ok">⭕ 正解！手技時はカバー必須＋速やかな清拭がセットです。</div>
+    <div id="q3-ng" class="quiz-feedback ng">❌ 穿刺・ドレナージなど手技時は<strong>プローブカバー使用が必須</strong>です。終了後は速やかに清拭します。</div>
+  </div>
+
+  <!-- ======= セクション3: 清掃・消毒 ======= -->
+  <div class="section-header sh-clean">
+    <span class="section-icon">🧼</span>
+    <div>
+      <h2>清掃・消毒</h2>
+      <p>Spaulding分類と接触部位でレベルが変わる！</p>
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      清掃・消毒は<em>交差感染予防</em>の大事な工程だよ。<br>
+      <strong>Spaulding分類</strong>って聞いたことある？プローブがどこに接触したかで、必要な消毒レベルが変わるんだ！
+    </div>
+  </div>
+
+  <div class="chat-wrap-user">
+    <div class="user-icon">🙋</div>
+    <div class="bubble-user">
+      <div class="speaker">学生さん</div>
+      Spaulding分類…名前は聞いたことあるかも。具体的にはどういう分類なの？
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      下の表を見てみよう！接触部位（皮膚・粘膜・創部）によって、必要な消毒レベルが<strong>LLD／MLD／HLD</strong>に分かれるよ🔍
+    </div>
+  </div>
+
+  <!-- Spaulding Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Spaulding分類</th>
+          <th>接触部位の例</th>
+          <th>必要な消毒レベル</th>
+          <th>主な処理方法</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>クリティカル</strong>（高リスク）</td>
+          <td>血管内・体腔内・創部など</td>
+          <td><span class="badge-hld">HLD（高水準消毒）</span></td>
+          <td>高水準消毒液への浸漬、または滅菌</td>
+        </tr>
+        <tr>
+          <td><strong>セミクリティカル</strong>（中リスク）</td>
+          <td>粘膜・創のない皮膚との接触（経食道・経腔など）</td>
+          <td><span class="badge-mld">MLD（中水準消毒）</span></td>
+          <td>中水準消毒＋単回カバー</td>
+        </tr>
+        <tr>
+          <td><strong>ノンクリティカル</strong>（低リスク）</td>
+          <td>正常皮膚のみと接触（体表エコー）</td>
+          <td><span class="badge-lld">LLD（低水準消毒）</span></td>
+          <td>洗浄・清拭（消毒用クロスなど）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="info-box">
+    <h3 class="blue">📋 AIUMガイドライン（2025年版）のポイント</h3>
+    <ul style="padding-left:1.2em; line-height:1.8;">
+      <li>外部プローブ（体表エコー）は原則<span class="tag">LLD</span></li>
+      <li>内部プローブ（経腔・経食道など）は<span class="tag red">HLD</span>＋単回カバーが基本</li>
+      <li>血液・体液汚染時は消毒レベルを一段上げる</li>
+    </ul>
+  </div>
+
+  <div class="info-box accent">
+    <h3 class="green">🧴 超音波ゲルの取り扱い</h3>
+    ゲルも感染経路になりうる。<strong>清潔なゲルを使い、汚染防止に努める</strong>こと。<br>
+    使い回しや汚染されたゲルはアウト！
+  </div>
+
+  <div class="key-point">
+    <div class="kp-title">🏥 臨床でのポイント</div>
+    <ul>
+      <li>手技時のカバーは「<em>破れたかもしれない</em>」を前提に、HLDの手順を省略しない。</li>
+      <li>消毒薬はプローブ素材との相性があるため、<strong>製造元IFUと施設基準の両方を満たす</strong>ものを選ぶ。</li>
+    </ul>
+  </div>
+
+  <!-- QUIZ 4 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 4</div>
+    <div class="q-text">経膣エコーで使用したプローブに必要な消毒レベルは？（Spaulding分類に基づく）</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q4')">A. LLD（低水準消毒）- ウェットティッシュで拭けばOK</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q4')">B. MLD（中水準消毒）- アルコール清拭で十分</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q4')">C. HLD（高水準消毒）＋単回カバーが基本</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q4')">D. 滅菌が必要なので病院では使用不可</div>
+    </div>
+    <div id="q4-ok" class="quiz-feedback ok">⭕ 正解！粘膜接触のある内部プローブは HLD ＋ 単回カバーが基本です。</div>
+    <div id="q4-ng" class="quiz-feedback ng">❌ 経膣エコーは粘膜と接触するセミクリティカルに分類され、<strong>HLD（高水準消毒）＋単回カバー</strong>が必要です。</div>
+  </div>
+
+  <!-- QUIZ 5 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 5</div>
+    <div class="q-text">腹部エコーで正常皮膚のみに接触したプローブ（ノンクリティカル）の消毒として適切なのは？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, true, 'q5')">A. 消毒用クロスで清拭（LLD）</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q5')">B. 高水準消毒液に30分浸漬（HLD）</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q5')">C. オートクレーブ（滅菌）</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q5')">D. 水洗いのみ</div>
+    </div>
+    <div id="q5-ok" class="quiz-feedback ok">⭕ 正解！正常皮膚のみと接触するノンクリティカルはLLDで十分です。</div>
+    <div id="q5-ng" class="quiz-feedback ng">❌ 正常皮膚接触（ノンクリティカル）は<strong>LLD（低水準消毒）</strong>で適切です。過度な消毒は素材を傷めます。</div>
+  </div>
+
+  <!-- QUIZ 6 -->
+  <div class="quiz-block">
+    <div class="q-label">🧠 クイズ 6</div>
+    <div class="q-text">次のうち、Spaulding分類に関して正しいものはどれ？</div>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="answer(this, false, 'q6')">A. すべてのプローブに同じ消毒レベルが必要</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q6')">B. 消毒レベルはプローブの種類だけで決まる</div>
+      <div class="quiz-option" onclick="answer(this, true, 'q6')">C. プローブが接触する部位（皮膚・粘膜・創部）で消毒レベルが変わる</div>
+      <div class="quiz-option" onclick="answer(this, false, 'q6')">D. 体表エコーには常にHLDが必要</div>
+    </div>
+    <div id="q6-ok" class="quiz-feedback ok">⭕ 正解！Spaulding分類は「どこに触れるか」で消毒レベルを決める考え方です。</div>
+    <div id="q6-ng" class="quiz-feedback ng">❌ Spaulding分類では、<strong>接触する部位（皮膚・粘膜・創部）</strong>によって必要な消毒レベルが決まります。</div>
+  </div>
+
+  <!-- まとめ -->
+  <div class="chat-wrap">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%231a6fd4'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white'%3E🤖%3C/text%3E%3C/svg%3E" alt="ソノボ君" class="sonobo-avatar">
+    <div class="bubble">
+      <div class="speaker">🤖 ソノボ君</div>
+      お疲れ様！ここで大事な3つをまとめておくね🎯<br><br>
+      <strong>① 保管</strong>：清潔レベルに応じて保管。再汚染・破損防止。<br>
+      <strong>② 取り扱い</strong>：精密機器だから丁寧に。異常は機材トラブルを疑う。<br>
+      <strong>③ 消毒</strong>：Spaulding分類で接触部位ごとにLLD/MLD/HLDを使い分ける。<br><br>
+      次はプローブ操作の基本に進もう！
+    </div>
+  </div>
+
+  <a href="topic6_probe_operation.html" class="next-btn">トピック6：プローブ操作の基本へ →</a>
+
+</main>
+
+<script>
+function answer(el, correct, qid) {
+  const opts = el.parentElement.querySelectorAll('.quiz-option');
+  opts.forEach(o => o.style.pointerEvents = 'none');
+  if (correct) {
+    el.classList.add('correct');
+    document.getElementById(qid + '-ok').classList.add('show');
+  } else {
+    el.classList.add('wrong');
+    document.getElementById(qid + '-ng').classList.add('show');
+    // Show correct answer
+    opts.forEach(o => { if(o.onclick && o.onclick.toString().includes('true')) o.classList.add('correct'); });
+  }
+}
+</script>
+
+</body>
+</html>
